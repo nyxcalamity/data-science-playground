@@ -23,6 +23,9 @@ from matplotlib.widgets import SpanSelector, Slider
 
 import matutil as mt
 
+__author__ = "Denys Sobchyshak"
+__email__ = "denys.sobchyshak@gmail.com"
+
 
 def generate_series(series_length, word_length, sax_cardinality, sym_representation):
     """
@@ -118,8 +121,10 @@ if __name__ == '__main__':
 
     # transform
     x, paa, sax = generate_series(n, w, c, representation)
+    # x1, paa1, sax1 = generate_series(n, w, c, representation)
+    # print('Distance between two sax strings: {}'.format(mt.mindist(n, sax, sax1, c, representation)))
+    # exit()
 
-    # visualization
     # creating layout grid
     fig = plt.figure()
     gs = gridspec.GridSpec(3, 3)
@@ -133,7 +138,6 @@ if __name__ == '__main__':
     # plotting windowed slice
     xmin = math.floor(n / 2)
     xmax = math.ceil(n / 2 + n / 10)
-    window = x[xmin:xmax]
     plot_series(x, paa, ax2, 'Selected window x=[{},{}]'.format(xmin, xmax), frame=(xmin, xmax))
 
     # adding span selector
@@ -148,7 +152,7 @@ if __name__ == '__main__':
     # plotting symbol frequency count
     plot_frequency(sax, c, representation, ax3)
 
-    # plotting parametrised sliders
+    # plotting parameter sliders
     series_length_slider = Slider(plt.axes([0.75, 0.25, 0.2, 0.03]), 'Series Length',
                                   valmin=100, valmax=10000, valinit=n, valfmt='%d')
     word_length_slider = Slider(plt.axes([0.75, 0.2, 0.2, 0.03]), 'Word Length',

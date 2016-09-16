@@ -54,6 +54,55 @@ def normalize(features):
     return (features-features.mean())/features.std()
 
 
+def distance(s1, s2, metric='euclidean'):
+    """
+    Computes distance measure for provided metric parameter
+    :param s1:
+    :param s2:
+    :param metric: euclidean
+    :return:
+        distance between two time series according to specified metric
+    """
+    if metric == 'euclidean':
+        return math.sqrt(((s1-s2)**2).sum())
+
+
+def sax_dist(sym1, sym2, symbols, breakpoints):
+    """
+    Computes distance between two sax symbols
+    :param sym1:
+    :param sym2:
+    :param symbols: list of symbols
+    :param breakpoints:
+    :return:
+    """
+    idx1 = symbols.index(sym1)
+    idx2 = symbols.index(sym2)
+    if abs(idx1-idx2) <= 1:
+        return 0
+    else:
+        return breakpoints[max(idx1, idx2)-1] - breakpoints[min(idx1, idx2)]
+
+
+def mindist(n, s1, s2, cardinality=256, representation='binary'):
+    """
+    Calculate distance between two sax series
+    :param n:
+    :param s1:
+    :param s2:
+    :param cardinality:
+    :param representation: binary, letter, integer
+    :return:
+        None if series are of different length, distance measure otherwise
+    """
+    w1, w2 = len(s1), len(s2)
+    if w1 == w2:
+        symbols = generate_symbols(cardinality, representation)
+        breakpoints = qnorm(cardinality)
+        distances = [sax_dist(s1[i], s2[i], symbols, breakpoints) for i in range(w1)]
+        return math.sqrt(n/w1)*math.sqrt((np.asarray(distances)**2).sum())
+
+
 def find_symbol(value, breakpoints, symbols):
     """
     Find a symbol for provided value that corresponds to a specific interval of the discretized N(0, 1) distribution
@@ -77,6 +126,7 @@ def generate_symbols(n, representation='binary'):
     :param n:
     :param representation: binary, letter, integer
     :return:
+        None, if unknown representation
     """
     if representation == 'binary':
         return ['{:0>{width}b}'.format(i, width=math.ceil(math.log2(n))) for i in range(n)]
@@ -95,7 +145,8 @@ def sax(series, w, c=256, representation='letter'):
     :param w: word length
     :param c: cardinality
     :param representation: binary, letter, integer
-    :return: None if series length is not divisible by word length without remainder
+    :return:
+        None if series length is not divisible by word length without remainder
     """
     if representation == 'letter' and c > 26:
         representation = 'binary'
@@ -116,7 +167,8 @@ def paa(series, w):
     to be divisible by word length without remainder.
     :param series:
     :param w:
-    :return: None if series length is not divisible by word length without remainder
+    :return:
+        None if series length is not divisible by word length without remainder
     """
     n = series.shape[0]
     if n % w != 0:

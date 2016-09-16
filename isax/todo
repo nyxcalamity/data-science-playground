@@ -1,3 +1,11 @@
 Noticed shortcomings of sax:
-- assumes gaussian disribution of time series (TS), thus the TS has to be stationary, i.e. seasonality and trend factors have to be removed
-- there seems to be a need of data normalization into a [0, 1]^d domain, which to an exent might defeat the purpose of scalability (e.g. online learing or stream processing tasks)
+- assumes gaussian distribution of time series (TS), thus the TS has to be stationary, i.e. seasonality and trend
+factors have to be removed
+- there seems to be a need of data normalization into a [0, 1]^d domain, which to an exent might defeat the purpose of
+scalability (e.g. online learning or stream processing tasks)
+
+
+TODO:
+- add DFT transform
+- write report
+- tangle with tree based breakpoint, symbol and distance matrix representation
