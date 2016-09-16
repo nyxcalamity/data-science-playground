@@ -179,6 +179,3 @@ def paa(series, w):
     for i in range(w):
         aggregate[i] = avg_ratio * series[step*i:step*(i+1)].sum()
     return aggregate
-
-
-
