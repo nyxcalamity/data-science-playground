@@ -14,115 +14,165 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import matutil as mt
-
 import math
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from matplotlib.widgets import SpanSelector, Slider, Button, RadioButtons
+from matplotlib.widgets import SpanSelector, Slider
 
-# parameters
-t = 1000
-w = 100
-c = 30
-representation = 'binary'
+import matutil as mt
 
-# transform
-x = mt.random_walk(t)
-X = mt.normalize(x)
-paa = mt.paa(X, w)
-sax = mt.sax(X, w, c, representation)
 
-# visualization
-# creating layout grid
-fig = plt.figure()
-gs = gridspec.GridSpec(3, 3)
-ax1 = plt.subplot(gs[0:-1, 0:-1])
-ax2 = plt.subplot(gs[-1,   0:-1])
-ax3 = plt.subplot(gs[0:-1,   -1])
-# ax4 = plt.subplot(gs[-1,     -1])
+def generate_series(series_length, word_length, sax_cardinality, sym_representation):
+    """
+    Generates normalized random walk, paa and sax
+    :param series_length:
+    :param word_length:
+    :param sax_cardinality:
+    :param sym_representation:
+    :return:
+    """
+    series = mt.normalize(mt.random_walk(series_length))
+    aggregate = mt.paa(series, word_length)
+    symbolic = mt.sax(series, word_length, sax_cardinality, sym_representation)
+    return series, aggregate, symbolic
 
-# plotting complete time series
-gline, = ax1.plot(X, label='Original Data', color='green', linewidth=1.2)
-gstep, = ax1.step(np.arange(w)*(t//w), paa, where='post', label='PAA', color='blue', linewidth=1.6)
-ax1.set_title('Complete series (t={}, w={})'.format(t, w))
-ax1.grid()
-ax1.legend(loc=2)
 
-# plotting windowed slice
-lline, = ax2.plot(X, label='Synthetic Series', color='green', linewidth=1.2)
-lstep, = ax2.step(np.arange(w)*(t//w), paa, where='post', label='PAA', color='blue', linewidth=1.6)
-ax2.set_title('Selected window')
-ax2.grid()
-window = X[math.floor(t/2):math.ceil(t/2+t/10)]
-ax2.set_xlim(math.floor(t/2), math.ceil(t/2+t/10))
-ax2.set_ylim(window.min(), window.max())
+def step_idx(series_length, word_length):
+    """
+    Calculates indexes for step plot
+    :param series_length:
+    :param word_length:
+    :return:
+    """
+    return np.arange(word_length) * (series_length // word_length)
 
-# adding span selector
-def onselect(xmin, xmax):
-    idx_min = math.floor(xmin)
-    idx_max = math.ceil(xmax)
-    local_x = X[idx_min:idx_max]
-    lline.set_data(np.arange(t), X.tolist())
-    lstep.set_data(np.arange(w) * (t // w), paa)
-    ax2.set_xlim(idx_min, idx_max)
-    ax2.set_ylim(local_x.min(), local_x.max())
-    fig.canvas.draw()
-span = SpanSelector(ax1, onselect, 'horizontal', useblit=True, rectprops=dict(alpha=0.2, facecolor='magenta'))
 
-# plotting symbol frequency count
-symbols = mt.generate_symbols(c, representation)
-frequency = [sax.count(i) for i in symbols]
-idx = np.arange(len(symbols))
-bar_width = 0.9
-ax3.barh(idx, frequency, bar_width, alpha=0.5, label='Frequency')
-plt.sca(ax3)
-plt.yticks(idx+bar_width/2, symbols)
-ax3.set_xlabel('Total count of occurrences')
-ax3.set_ylabel('Symbol')
-ax3.grid()
+def calculate_sym_frequency(sax_series, sax_cardinality, sym_representation):
+    """
+    Calculates symbol frequency in provided sax series
+    :param sax_series:
+    :param sax_cardinality:
+    :param sym_representation:
+    :return:
+    """
+    sax_symbols = mt.generate_symbols(sax_cardinality, sym_representation)
+    sym_frequency = [sax_series.count(i) for i in sax_symbols]
+    sym_idx = np.arange(len(sax_symbols))
+    return sym_idx, sax_symbols, sym_frequency
 
-# plotting parametrised sliders
-axfreq = plt.axes([0.75, 0.2, 0.2, 0.03])
-axamp = plt.axes([0.75, 0.25, 0.2, 0.03])
-ts_length = Slider(axfreq, 'Series Length', valmin=100, valmax=10000, valinit=t, valfmt='%d')
-word_length = Slider(axamp, 'Word Length', valmin=10, valmax=1000, valinit=w, valfmt='%d')
-def update(val):
-    global t
-    global w
-    global x
-    global X
-    global paa
-    global sax
-    t = int(ts_length.val)
-    w = int(word_length.val)
-    if t % w != 0:
-        t = w*math.ceil(t/w)
-    x = mt.random_walk(t)
-    X = mt.normalize(x)
-    paa = mt.paa(X, w)
-    gline.set_data(np.arange(t), X.tolist())
-    gstep.set_data(np.arange(w)*(t//w), paa)
-    ax1.set_xlim(0, t)
-    ax1.set_ylim(X.min(), X.max())
-    ax1.set_title('Complete series (t={}, w={})'.format(t, w))
-    # updating frequency count
-    sax = mt.sax(X, w, c, representation)
-    symbols = mt.generate_symbols(c, representation)
-    frequency = [sax.count(i) for i in symbols]
-    idx = np.arange(len(symbols))
-    ax3.cla()
-    ax3.barh(idx, frequency, bar_width, alpha=0.5, label='Frequency')
-    plt.sca(ax3)
+
+def plot_series(series, aggregate, axis, title, frame=None, enable_legend=False):
+    """
+    Plots a series with it's step aggregate on provided axis
+    :param series:
+    :param aggregate:
+    :param axis:
+    :param title:
+    :param frame:
+    :param enable_legend:
+    :return:
+    """
+    series_length = len(series)
+    word_length = len(aggregate)
+    axis.cla()
+    axis.plot(series, label='Original Data', color='green', linewidth=1.2)
+    axis.step(step_idx(series_length, word_length), aggregate, where='post', label='PAA', color='blue', linewidth=1.6)
+    if not frame:
+        frame = (0, series_length)
+    axis.set_xlim(*frame)
+    axis.set_ylim(x[frame[0]:frame[1]].min(), x[frame[0]:frame[1]].max())
+    axis.grid()
+    if enable_legend:
+        axis.legend(loc=2)
+    axis.set_title(title)
+
+
+def plot_frequency(sax_series, sax_cardinality, sym_representation, axis):
+    """
+    Calculates and plots sax symbol frequency histogram on provided axis
+    :param sax_series:
+    :param sax_cardinality:
+    :param sym_representation:
+    :param axis:
+    :return:
+    """
+    idx, symbols, freq = calculate_sym_frequency(sax_series, sax_cardinality, sym_representation)
+    bar_width = 0.9
+    axis.cla()
+    axis.barh(idx, freq, bar_width, alpha=0.5, label='Frequency')
+    plt.sca(axis)
     plt.yticks(idx + bar_width / 2, symbols)
-    ax3.set_xlabel('Total count of occurrences')
-    ax3.set_ylabel('Symbol')
-    ax3.grid()
-    fig.canvas.draw_idle()
-ts_length.on_changed(update)
-word_length.on_changed(update)
+    axis.set_xlabel('Total count of occurrences')
+    axis.set_ylabel('Symbol')
+    axis.grid()
 
-# showing the figure
-fig.tight_layout()
-plt.show()
+
+if __name__ == '__main__':
+    # parameters
+    n = 1000
+    w = 100
+    c = 30
+    representation = 'binary'
+
+    # transform
+    x, paa, sax = generate_series(n, w, c, representation)
+
+    # visualization
+    # creating layout grid
+    fig = plt.figure()
+    gs = gridspec.GridSpec(3, 3)
+    ax1 = plt.subplot(gs[0:-1, 0:-1])
+    ax2 = plt.subplot(gs[-1,   0:-1])
+    ax3 = plt.subplot(gs[0:-1,   -1])
+
+    # plotting complete time series
+    plot_series(x, paa, ax1, 'Complete series (t={}, w={})'.format(n, w), enable_legend=True)
+
+    # plotting windowed slice
+    xmin = math.floor(n / 2)
+    xmax = math.ceil(n / 2 + n / 10)
+    window = x[xmin:xmax]
+    plot_series(x, paa, ax2, 'Selected window x=[{},{}]'.format(xmin, xmax), frame=(xmin, xmax))
+
+    # adding span selector
+    def onselect(xmin, xmax):
+        idx_min = math.floor(xmin)
+        idx_max = math.ceil(xmax)
+        plot_series(x, paa, ax2, 'Selected window x=[{},{}]'.format(idx_min, idx_max), frame=(idx_min, idx_max))
+        fig.canvas.draw()
+    span_selector = SpanSelector(ax1, onselect, 'horizontal', useblit=True,
+                                 rectprops=dict(alpha=0.2, facecolor='magenta'))
+
+    # plotting symbol frequency count
+    plot_frequency(sax, c, representation, ax3)
+
+    # plotting parametrised sliders
+    series_length_slider = Slider(plt.axes([0.75, 0.25, 0.2, 0.03]), 'Series Length',
+                                  valmin=100, valmax=10000, valinit=n, valfmt='%d')
+    word_length_slider = Slider(plt.axes([0.75, 0.2, 0.2, 0.03]), 'Word Length',
+                                valmin=10, valmax=1000, valinit=w, valfmt='%d')
+    cardinality_slider = Slider(plt.axes([0.75, 0.15, 0.2, 0.03]), 'Cardinality ',
+                                valmin=2, valmax=70, valinit=c, valfmt='%d')
+
+    def update(val):
+        global n, w, c, x, paa, sax
+        n = int(series_length_slider.val)
+        w = int(word_length_slider.val)
+        c = int(cardinality_slider.val)
+        if n % w != 0:
+            n = w * math.ceil(n / w)
+        x, paa, sax = generate_series(n, w, c, representation)
+        # update series plot
+        plot_series(x, paa, ax1, 'Complete series (t={}, w={})'.format(n, w), enable_legend=True)
+        # update frequency plot
+        plot_frequency(sax, c, representation, ax3)
+        fig.canvas.draw_idle()
+    series_length_slider.on_changed(update)
+    word_length_slider.on_changed(update)
+    cardinality_slider.on_changed(update)
+
+    # showing the figure
+    fig.tight_layout()
+    plt.show()

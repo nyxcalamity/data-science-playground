@@ -14,8 +14,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import string
 import math
+import string
+
 import numpy as np
 import scipy.stats as stat
 
@@ -23,20 +24,44 @@ __author__ = "Denys Sobchyshak"
 __email__ = "denys.sobchyshak@gmail.com"
 
 
-def sax(series, w, c=256, representation='letter'):
-    if representation == 'letter' and c > 26:
-        representation = 'binary'
-    # series = normalize(series)
-    aggregate = paa(series, w)
-    symbols = generate_symbols(c, representation)
-    breakpoints = qnorm(c)
-    symbolic = list()
-    for i in range(w):
-        symbolic.append(find_symbol(aggregate[i], breakpoints, symbols))
-    return symbolic
+def qnorm(n=3):
+    """
+    Generates quantile values of N(0, 1) for provided number of splits, e.g. for four splits it will generate an
+    array [-0.67448975,  0,  0.67448975]
+    :param n:
+    :return:
+    """
+    if n > 1:
+        return stat.norm.ppf(np.linspace(0, 1, n+1)[1:-1])
+
+
+def random_walk(t=1000):
+    """
+    Generates a simple random walk sequence
+    :param t:
+    :return:
+    """
+    if t > 0:
+        return np.cumsum(np.random.randn(t))
+
+
+def normalize(features):
+    """
+    Normalizes features into a mean of 0 and standard deviation of 1.
+    :param features:
+    :return:
+    """
+    return (features-features.mean())/features.std()
 
 
 def find_symbol(value, breakpoints, symbols):
+    """
+    Find a symbol for provided value that corresponds to a specific interval of the discretized N(0, 1) distribution
+    :param value:
+    :param breakpoints:
+    :param symbols:
+    :return:
+    """
     if value > breakpoints[-1]:
         return symbols[-1]
     else:
@@ -46,6 +71,13 @@ def find_symbol(value, breakpoints, symbols):
 
 
 def generate_symbols(n, representation='binary'):
+    """
+    Generates n symbols in provided representation. Will not return more than 26 symbols for 'letter' representation.
+    Available representations: binary, letter, integer
+    :param n:
+    :param representation: binary, letter, integer
+    :return:
+    """
     if representation == 'binary':
         return ['{:0>{width}b}'.format(i, width=math.ceil(math.log2(n))) for i in range(n)]
     elif representation == 'letter':
@@ -54,7 +86,38 @@ def generate_symbols(n, representation='binary'):
         return [str(i) for i in range(n)]
 
 
+def sax(series, w, c=256, representation='letter'):
+    """
+    Transforms provided series into a Symbolic Aggregate approXimation (SAX) representation. Requires series to be
+    normalized around 0 with standard deviation of 1. Will switch to binary representation if cardinality is smaller
+    than 26. Requires series length to be divisible by word length without remainder.
+    :param series:
+    :param w: word length
+    :param c: cardinality
+    :param representation: binary, letter, integer
+    :return: None if series length is not divisible by word length without remainder
+    """
+    if representation == 'letter' and c > 26:
+        representation = 'binary'
+    if len(series) % w != 0:
+        return None
+    aggregate = paa(series, w)
+    symbols = generate_symbols(c, representation)
+    breakpoints = qnorm(c)
+    symbolic = list()
+    for i in range(w):
+        symbolic.append(find_symbol(aggregate[i], breakpoints, symbols))
+    return symbolic
+
+
 def paa(series, w):
+    """
+    Transforms provided series into a Piecewise Aggregate Approximation (PAA) representation. Requires series length
+    to be divisible by word length without remainder.
+    :param series:
+    :param w:
+    :return: None if series length is not divisible by word length without remainder
+    """
     n = series.shape[0]
     if n % w != 0:
         return None
@@ -66,15 +129,4 @@ def paa(series, w):
     return aggregate
 
 
-def qnorm(n=3):
-    if n > 1:
-        return stat.norm.ppf(np.linspace(0, 1, n+1)[1:-1])
 
-
-def random_walk(t=1000):
-    if t > 0:
-        return np.cumsum(np.random.randn(t))
-
-
-def normalize(features):
-    return (features-features.mean())/features.std()
