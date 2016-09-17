@@ -50,12 +50,12 @@ The following is a list of software installations and libraries, required for th
 \end{itemize}
 
 \subsection{Definitions}
-In the further parts of this work we will refer to SAX as a data reduction technique, however, in some works (e.g. \cite{keogh2001dimensionality}, \cite{lin2007experiencing}, \cite{shieh2008sax} etc.) SAX may be referred to as a dimensionality reduction technique. As implied in \cite{xi2006fast}, I'd like to set a clear boundary between the terms and argue that in a general problem setting SAX is not a dimensionality reduction technique. \par
+In the further parts of this work we will refer to SAX as a data reduction technique, however, in some works (e.g. \cite{keogh2001dimensionality}, \cite{lin2007experiencing}, \cite{shieh2008sax}, etc.) SAX may be referred to as a dimensionality reduction technique. As implied in \cite{xi2006fast}, I'd like to set a clear boundary between the terms and argue that in a general problem setting SAX is not a dimensionality reduction technique. \par
 Specifically, for $n,m,k,l \in \mathbb{N}$ let's define a transformation that receives a $n \times m$ dimensional set with $n$ data points each defined in $\mathbb{R}^m$ and returns a $n \times k$ dataset with $k < m$ and each of $n$ data points defined in $\mathbb{R}^k$ to be a dimensionality reduction technique. Please note, that while according to our definition domains are defined in $\mathbb{R}$, some techniques can use a character space for the domains and we do not wish to exclude those techniques. Given that definition, we will define data or numerosity reduction technique as a transformation that receives $n \times m$ dimensional set with $n$ data points each defined in $\mathbb{R}^m$ and returns a $l \times m$ set, where $l < n$ and the domain of each of $m$ dimensions is arbitrarily defined. \par
 Thus, simply put, a data reduction technique provides a different and compressed representation of the original data, yet retains the number of dimensions of the original feature space, while a dimensionality reduction technique tries to find a linear or non-linear combination in the original feature space and reduces that space to only the most important components. However, it can be argued that for a specific problem setting (e.g. nearest neighbor search) SAX can be considered a dimensionality reduction technique.
 
 \section{SAX Representation}
-To start with, it was needed to see a SAX representation for a synthetic time series. Thus, it was needed to generate a time series such that it would not require further preprocessing, in other words it would not violate any of SAX assumptions. According to \cite{shieh2008sax} the only assumption SAX makes is that the underlying data has a local Gaussian distribution (i.e. on small intervals), which SAX author claims to be present in over 120 studied data sets from various domains \cite{keogh2006sax_presentation}. Moreover, not only the author claims that the distribution adaptive implementation of SAX that he experimented with would always approximately descend to a Gaussian distribution, but also, even if the underlying data has a different distribution, the SAX approach would still provide valid results only with a degraded performance.\par
+To start with, it was needed to provide a SAX representation for a synthetic time series. Thus, it was needed to generate a time series, such that it would not require further preprocessing, or simply put, it would not violate any of SAX assumptions. According to \cite{shieh2008sax} the only assumption SAX makes is that the underlying data has a local Gaussian distribution (i.e. on small intervals), which SAX author claims to be present in over 120 studied data sets from various domains \cite{keogh2006sax_presentation}. Moreover, not only the author claims, that the distribution adaptive implementation of SAX which he experimented with would always approximately descend to a Gaussian distribution, but also, even if the underlying data has a different distribution, the SAX approach would still provide valid results only with a degraded performance.\par
 Given the aforementioned, a simple random walk with Gaussian distribution for random number generator would provide the needed results and was implemented as
 \begin{lstlisting}
 import numpy as np
@@ -90,9 +90,10 @@ $$sax2=['001', '010', '100', '100']$$
 and measure the distance between them while comparing it to the Euclidean between the original series
 $$eucl=4.276009034552973$$
 $$mindist=1.965338463812398$$
+which is clearly smaller, than the Euclidean, thus providing us with a lower bounding estimate of the true distance.
 
 \section{Alternative Representation}
-While reading about dimensionality reduction of time series I've stumbled across a novel technique called forecastability component analysis (ForeCA) \cite{goerg2013forecastable} \cite{goerg2013forecastable_presentation}, which seem to heavily rely on Fourier transforms for spectrum analysis of a series. It's content is rather involving and math intensive, thus was deemed to be out of scope for the purposes of this work. However, as \cite{shieh2008sax} mentioned the use of discrete Fourier transforms (DFT) for data reduction and sequence matching, I decided to investigate the method and implement it accounting for considerations noted in \cite{faloutsos1994fast}.\par
+While reading about dimensionality reduction of time series I've stumbled across a novel technique called forecastability component analysis (ForeCA) \cite{goerg2013forecastable} \cite{goerg2013forecastable_presentation}, which seem to heavily rely on Fourier transforms for spectrum analysis of a series. It's content is rather involving and math intensive, thus was deemed to be out of scope for the purposes of this work. However, as mentioned in \cite{shieh2008sax} and \cite{faloutsos1994fast}, the use of discrete Fourier transforms (DFT) for data reduction and sequence matching have been quite successful and also provides the desirable lower bounding property. Thus it was decided to investigate the method and implement it accounting for considerations noted in \cite{faloutsos1994fast}.\par
 The results were rather interesting and did not follow the recommendations in \cite{faloutsos1994fast} to use only 2-3 frequency components for the aforementioned synthetic time series, but rather required around 100 components for a data set of 2000 points in order to gain reasonable time series reconstruction. However, given that only the frequency components have to be stored, it is still a great reduction from initial time series size. A showcase of DFT reconstruction as compared to the original data can be seen on Figure \ref{fig:1}.
 \begin{figure}[h!]
 	\begin{center}
@@ -103,12 +104,11 @@ The results were rather interesting and did not follow the recommendations in \c
 \end{figure}
 
 \section{(Optional) Parallelization}
-- argue that this task to a great extent depends on hardware specifications
-- give a theoretical explanation of solving this problem
-- argue, that for the prototypical purposes of this work it was decided to tangle with py4mpi
+As parallelization of SAX within a computer cluster can not be considered a trivial task, I did not tangle with it in great depth. However, in general such task would not only require a proper infrastructure set up, but also is highly dependent on the underlying hardware specifications, cluster interconnects, etc. \par
+For our problem setting of not having enough memory (i.e. RAM) to process the entire data set at once and given that time series is stored on a network attached storage (NAS) or alike external location and each node within a cluster has access to it, one can provide a general description of how this issue can be tackled. Specifically, for a POC style solution I would use an MPI implementation, such as MPICH \cite{mpich}, paired with it's python binding (e.g. \cite{dalcin2011parallel}) to read different parts of time series and process it in parallel. The processing itself would require nodes to share following data: series length, PAA word length, SAX cardinality, normalization data such as slice mean and variance, potentially boundary values of the series for proper PAA calculation and the resulting SAX part for final output (or the reduction in MapReduce context).
 
 \section{Interactive visualization}
-For interactive exploration of influence of various parameters on the resulting output as a matplotlib based visualization was implemented. It comprises four visualizations with several parameter control sliders as explained in Figure \ref{fig:2}. In order to interact with the visualization one will need to click on different parts of sliders. Please note, that changing the time series length will result in generation of a new random walk, while change of other parameters only adapts the corresponding transformations.
+For interactive exploration of influence of various parameters on the resulting output a matplotlib based GUI was implemented. It comprises four visualizations with several parameter control sliders as explained in Figure \ref{fig:2}. In order to interact with the visualization one will need to click on different parts of sliders. Please note, that changing the time series length will result in generation of a new random walk, while change of other parameters only adapts the corresponding transformations.
 \begin{figure}[h!]
 	\begin{center}
 		\includegraphics[width=\textwidth]{images/vis-labeled.png}
@@ -118,11 +118,8 @@ For interactive exploration of influence of various parameters on the resulting 
 \end{figure}
 
 \section{Conclusions}
-- sax is cool
-- application scope
-- there seems to be a need of data normalization into a [0, 1] to d domain, which to an exent might defeat the purpose of scalability (e.g. online learning or stream processing tasks)
-- further work should include detailed analysis of SAX based prediction in 2 papers
-
+As I got familiar with SAX and basics of iSAX, the idea behind the technique seems to provide a great deal of performance gain and decrease in memory usage for time series storage. Thus, any task that requires sub-series matching or similarity search should greatly profit form this technique. However, SAX might be less efficient in streaming or online analysis settings, where the entire data set is not available even on separate nodes of the cluster. This comes from a requirement to normalize the data values into a $\mathcal{N}(0, 1)$ distribution, i.e. to scale it to mean 0 and standard deviation of 1. Thus a further investigation of topics such as \cite{lin2003symbolic} and adoption of SAX for algorithms, such as stochastic gradient descent, is absolutely required.\par
+Moreover, as my focus is mainly on predictive analytics, I find it necessary to continue investigating case studies of SAX applications as in \cite{vzliobaite2012beating} and \cite{morgan2009predicting}. Naturally, earlier mentioned ForeCA technique is also caught up in the crosshairs.
 
 \bibliography{sax-acquaintance}
 \bibliographystyle{plain}
