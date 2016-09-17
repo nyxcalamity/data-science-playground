@@ -133,7 +133,7 @@ def plot_histogram(sax_series, sax_cardinality, sym_representation, axis):
     axis.barh(idx, freq, bar_width, alpha=0.5, label='Frequency')
     plt.sca(axis)
     plt.yticks(idx + bar_width / 2, symbols)
-    axis.set_xlabel('Total count of occurrences')
+    axis.set_xlabel('Count of occurrences')
     axis.set_ylabel('Symbol')
     axis.grid()
 
@@ -158,17 +158,30 @@ if __name__ == '__main__':
 
     # initial parameters
     n = 2000
-    w = 100
+    w = 250
     c = 30
-    d = 60
+    d = 120
     representation = 'binary'
 
     # transform
     x, paa, sax, dft = generate_series(n, w, c, representation, d)
 
-    # distance measure
-    # x1, paa1, sax1, dft = generate_series(n, w, c, representation, d)
-    # print('Distance between two sax strings: {}'.format(mt.mindist(n, sax, sax1, c, representation)))
+    # transform showcase
+    # x1 = mt.normalize(np.array([-1.80089787, -2.08520023, -1.91626555, -3.54447247, -3.33739674]))
+    # x2 = mt.normalize(np.array([1.04508559, 1.40411095, 1.98780976, 2.4299798, 3.32198882]))
+    # word = 4
+    # card = 5
+    # sax1 = mt.sax(x1, word, card, representation)
+    # sax2 = mt.sax(x2, word, card, representation)
+    # print('eucl={} mindist={}'.format(mt.distance(x1, x2), mt.mindist(len(x1), sax1, sax2, card)))
+    # print('x1={} sax1={}'.format(x1, sax1))
+    # print('x2={} sax2={}'.format(x2, sax2))
+    # exit()
+
+    # DFT showcase
+    # f, ax = plt.subplots()
+    # plot_series(x, paa, dft, ax, 'Complete series (t={}, w={}, freq={})'.format(n, w, d), enable_legend=True)
+    # plt.show()
     # exit()
 
     # creating layout grid

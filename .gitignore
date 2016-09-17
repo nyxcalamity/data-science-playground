@@ -7,3 +7,13 @@
 #binaries
 __pycache__
 *.pyc
+
+# latex misc
+*/report/*.aux
+*/report/*.bbl
+*/report/*.bcf
+*/report/*.blg
+*/report/*.log
+*/report/*.out
+*/report/*.xml
+*/report/*.gz

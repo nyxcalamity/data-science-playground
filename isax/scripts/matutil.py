@@ -35,23 +35,23 @@ def qnorm(n=3):
         return stat.norm.ppf(np.linspace(0, 1, n+1)[1:-1])
 
 
-def random_walk(t=1000):
+def random_walk(n=1000):
     """
     Generates a simple random walk sequence
-    :param t:
+    :param n:
     :return:
     """
-    if t > 0:
-        return np.cumsum(np.random.randn(t))
+    if n > 0:
+        return np.cumsum(np.random.randn(n))
 
 
-def normalize(features):
+def normalize(series):
     """
     Normalizes features into a mean of 0 and standard deviation of 1.
-    :param features:
+    :param series:
     :return:
     """
-    return (features-features.mean())/features.std()
+    return (series - series.mean()) / series.std()
 
 
 def distance(s1, s2, metric='euclidean'):
@@ -140,7 +140,7 @@ def sax(series, w, c=256, representation='letter'):
     """
     Transforms provided series into a Symbolic Aggregate approXimation (SAX) representation. Requires series to be
     normalized around 0 with standard deviation of 1. Will switch to binary representation if cardinality is smaller
-    than 26. Requires series length to be divisible by word length without remainder.
+    than 26.
     :param series:
     :param w: word length
     :param c: cardinality
@@ -179,5 +179,5 @@ def paa(series, w):
     aggregate = [0]*w
     idx = np.arange(n*w) // w
     for i in range(0, n*w, n):
-        aggregate[i//n] = (series[idx[i:i+n]]).sum() / n
+        aggregate[i//n] = series[idx[i:i+n]].sum() / n
     return aggregate
