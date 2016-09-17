@@ -150,8 +150,6 @@ def sax(series, w, c=256, representation='letter'):
     """
     if representation == 'letter' and c > 26:
         representation = 'binary'
-    if len(series) % w != 0:
-        return None
     aggregate = paa(series, w)
     symbols = generate_symbols(c, representation)
     breakpoints = qnorm(c)
@@ -163,19 +161,23 @@ def sax(series, w, c=256, representation='letter'):
 
 def paa(series, w):
     """
-    Transforms provided series into a Piecewise Aggregate Approximation (PAA) representation. Requires series length
-    to be divisible by word length without remainder.
+    Transforms provided series into a Piecewise Aggregate Approximation (PAA) representation
     :param series:
     :param w:
+        word length or size of the transform with 0 < w <= len(series)
     :return:
-        None if series length is not divisible by word length without remainder
+        None if w < 1 or len(series) < w, PAA otherwise
     """
-    n = series.shape[0]
-    if n % w != 0:
+    n = len(series)
+    series = np.array(series)
+    if n == w:
+        return series
+    if w == 1:
+        return [series.mean()]
+    if w < 1 or n < w:
         return None
-    avg_ratio = w/n
-    step = n//w
-    aggregate = np.zeros(w)
-    for i in range(w):
-        aggregate[i] = avg_ratio * series[step*i:step*(i+1)].sum()
+    aggregate = [0]*w
+    idx = np.arange(n*w) // w
+    for i in range(0, n*w, n):
+        aggregate[i//n] = (series[idx[i:i+n]]).sum() / n
     return aggregate

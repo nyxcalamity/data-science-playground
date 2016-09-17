@@ -67,7 +67,7 @@ def step_idx(series_length, word_length):
     :param word_length:
     :return:
     """
-    return np.arange(word_length) * (series_length // word_length)
+    return np.arange(word_length) * (series_length / word_length)
 
 
 def calculate_sym_frequency(sax_series, sax_cardinality, sym_representation):
@@ -152,8 +152,12 @@ def plot_frequencies(series, axis):
 
 
 if __name__ == '__main__':
-    # parameters
-    n = 1000
+    # hacking tight layout warning
+    import warnings
+    warnings.filterwarnings("ignore")
+
+    # initial parameters
+    n = 2000
     w = 100
     c = 30
     d = 60
@@ -200,13 +204,13 @@ if __name__ == '__main__':
 
     # plotting parameter sliders
     series_length_slider = Slider(plt.axes([0.76, 0.18, 0.19, 0.02]), 'Series Length',
-                                  valmin=100, valmax=10000, valinit=n, valfmt='%d')
+                                  valmin=1000, valmax=10000, valinit=n, valfmt='%d')
     word_length_slider = Slider(plt.axes([0.76, 0.14, 0.19, 0.02]), 'Word Length',
                                 valmin=10, valmax=1000, valinit=w, valfmt='%d')
     cardinality_slider = Slider(plt.axes([0.76, 0.1, 0.19, 0.02]), 'Cardinality',
                                 valmin=2, valmax=70, valinit=c, valfmt='%d')
-    frequency_primes_slider = Slider(plt.axes([0.76, 0.06, 0.19, 0.02]), 'DFT components',
-                                valmin=10, valmax=100, valinit=d, valfmt='%d')
+    frequency_primes_slider = Slider(plt.axes([0.76, 0.06, 0.19, 0.02]), 'DFT Components',
+                                valmin=10, valmax=200, valinit=d, valfmt='%d')
 
     def update(val):
         global n, w, c, d, x, paa, sax, dft
@@ -214,8 +218,6 @@ if __name__ == '__main__':
         w = int(word_length_slider.val)
         c = int(cardinality_slider.val)
         d = int(frequency_primes_slider.val)
-        if n_new % w != 0:
-            n_new = w * math.ceil(n_new/w)
         if n != n_new:
             n = n_new
             x, paa, sax, dft = generate_series(n, w, c, representation, d)
