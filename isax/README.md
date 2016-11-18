@@ -24,4 +24,4 @@ $python3.4 scripts/main.py
 ### Results and insights
 Please, see the conclusions section of the [report].
 
-[report]:<https://github.com/nyxcalamity/data-science-playground/blob/master/isax/report/sax-acquaintance.pdf>
+[report]: <https://github.com/nyxcalamity/data-science-playground/blob/master/isax/report/sax-acquaintance.pdf>

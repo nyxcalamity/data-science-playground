@@ -34,4 +34,4 @@ $python3.4 data-scientist.py -f ./data/hour.csv
     - categorical and most time related features were transformed using one-hot-encoding approach due to an explicit bias and misleading information (e.g. a distance measure of 1h and 23h would suggest that the values are quite far apart, however they are merely 2h away)
     -  predicted values were not scaled back, however in a real world usage scenario such operation is obviously required
 
-[Bike Sharing Dataset]:<https://archive.ics.uci.edu/ml/datasets/Bike+Sharing+Dataset>
+[Bike Sharing Dataset]: <https://archive.ics.uci.edu/ml/datasets/Bike+Sharing+Dataset>

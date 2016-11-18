@@ -8,5 +8,5 @@ Repo for data science related projects of various sizes and durations, aimed mai
 
 
 [Bike sharing client trend forcasting]: <https://github.com/nyxcalamity/data-science-playground/tree/master/forecasting>
-[Data reduction: iSAX vs Fourier]: <https://github.com/nyxcalamity/data-science-playground/tree/master/isax>
-[report]:<https://github.com/nyxcalamity/data-science-playground/blob/master/isax/report/sax-acquaintance.pdf>
+[Data reduction: SAX vs Fourier]: <https://github.com/nyxcalamity/data-science-playground/tree/master/isax>
+[report]: <https://github.com/nyxcalamity/data-science-playground/blob/master/isax/report/sax-acquaintance.pdf>
